@@ -137,7 +137,9 @@ button:active {
     display: flex;
     gap: 0.9rem;
     font-weight: 600;
-    font-size: 0.95rem;
+    font-size: 0.85rem;
+    flex-wrap: wrap;
+    justify-content: flex-end;
 }
 
 .pill {
@@ -351,6 +353,38 @@ button:active {
 
 .chip.noblegas {
     border-color: rgba(192, 132, 252, 0.9);
+}
+
+/* Board view difficulty states */
+
+.periodic-grid[data-view="all"] .number,
+.periodic-grid[data-view="all"] .symbol,
+.periodic-grid[data-view="all"] .name {
+    opacity: 1;
+    visibility: visible;
+}
+
+.periodic-grid[data-view="symbols-only"] .name,
+.periodic-grid[data-view="symbols-only"] .number {
+    opacity: 0;
+    visibility: hidden;
+}
+
+.periodic-grid[data-view="names-only"] .symbol,
+.periodic-grid[data-view="names-only"] .number {
+    opacity: 0;
+    visibility: hidden;
+}
+
+.periodic-grid[data-view="numbers-only"] .symbol,
+.periodic-grid[data-view="numbers-only"] .name {
+    opacity: 0;
+    visibility: hidden;
+}
+
+.periodic-grid[data-view="minimal"] .number {
+    opacity: 0;
+    visibility: hidden;
 }
 
 /* Summary */

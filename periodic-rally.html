@@ -22,9 +22,9 @@
             <details class="instructions">
                 <summary>How to play</summary>
                 <ul>
-                    <li><strong>Explorer Mode</strong> – No timer. Complete missions such as “Click the symbol for Sodium” or “Find a Group 1 metal”. Great for learning.</li>
-                    <li><strong>Race Mode</strong> – Beat the rival car by answering quickly and accurately before time runs out.</li>
-                    <li>Click the correct element on the colourful periodic table grid.</li>
+                    <li><strong>Explorer Mode</strong> – Start with the top of the table. Unlock new rows (periods) by scoring points. Lives are limited!</li>
+                    <li><strong>Race Mode</strong> – Full table unlocked. Beat the rival car by answering quickly and accurately before time runs out.</li>
+                    <li>Sometimes you see <em>only symbols</em>, sometimes <em>only names</em> or <em>numbers</em> – use what you know.</li>
                 </ul>
             </details>
         </section>
@@ -37,6 +37,7 @@
                     <span id="score-display">Score: 0</span>
                     <span id="lives-display" class="hidden">Lives: 3</span>
                     <span id="timer-display" class="hidden">Time: 60</span>
+                    <span id="progress-display" class="hidden">Unlocked: Periods 1–2</span>
                 </div>
             </div>
 
@@ -67,14 +68,17 @@
 
                 <section class="right-panel">
                     <div class="card">
-                        <h2>First 20 Elements</h2>
-                        <p class="hint small">Colour shows type (metal, non‑metal, noble gas, halogen). Hover to see names.</p>
-                        <div id="periodic-grid" class="periodic-grid">
+                        <h2>Periodic Table</h2>
+                        <p class="hint small">
+                            Explorer: Starts with top rows and unlocks more as you score.<br>
+                            Race: Full table from the start. View changes depending on the question.
+                        </p>
+                        <div id="periodic-grid" class="periodic-grid" data-view="all">
                             <!-- Elements will be injected here by JS -->
                         </div>
                         <div class="legend">
                             <span class="chip metal">Metal</span>
-                            <span class="chip nonmetal">Non‑metal</span>
+                            <span class="chip nonmetal">Non-metal</span>
                             <span class="chip halogen">Halogen</span>
                             <span class="chip noblegas">Noble gas</span>
                         </div>

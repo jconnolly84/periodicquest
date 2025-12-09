@@ -1,8 +1,9 @@
-// Periodic Explorer Race
+// Periodic Explorer Race v2
 // KS3 Y9 – first 20 elements, Explorer + Race modes
+// Now with: progressive unlock by period + display difficulty (symbols / names / numbers).
 
 const elements = [
-  // number, symbol, name, group (1-8 simplified), period, type
+  // number, symbol, name, group (1-8 simplified), period, type, col (position in 8-column layout)
   { number: 1, symbol: "H",  name: "Hydrogen",    group: 1, period: 1, type: "nonmetal",  col: 1 },
   { number: 2, symbol: "He", name: "Helium",      group: 8, period: 1, type: "noblegas",  col: 8 },
 
@@ -38,6 +39,7 @@ const feedbackEl = document.getElementById("feedback");
 const scoreDisplay = document.getElementById("score-display");
 const livesDisplay = document.getElementById("lives-display");
 const timerDisplay = document.getElementById("timer-display");
+const progressDisplay = document.getElementById("progress-display");
 const modeLabel = document.getElementById("mode-label");
 const racePanel = document.getElementById("race-panel");
 const playerCar = document.getElementById("player-car");
@@ -60,9 +62,12 @@ let timerId = null;
 let currentQuestion = null; // { text, hint, correctIds: [], type }
 let acceptingAnswers = false;
 
+// Progressive unlock: which periods are visible
+let currentMaxPeriod = 2; // Explorer starts with periods 1–2 only
+
 // Race state
 const RACE_DURATION = 60; // seconds
-const RACE_QUESTIONS = 18;
+const RACE_QUESTIONS = 20;
 let playerProgress = 0; // 0-100
 let cpuProgress = 0;    // 0-100
 
@@ -86,11 +91,20 @@ function resetFeedback() {
   feedbackEl.classList.remove("correct", "wrong");
 }
 
+// Board view (difficulty layer)
+
+function setBoardView(view) {
+  // view: 'all' | 'symbols-only' | 'names-only' | 'numbers-only' | 'minimal'
+  periodicGrid.dataset.view = view;
+}
+
 // Build periodic grid
 
-function createGrid() {
+function createGrid(maxPeriod = currentMaxPeriod) {
   periodicGrid.innerHTML = "";
-  elements.forEach(el => {
+  const visibleElements = elements.filter(e => e.period <= maxPeriod);
+
+  visibleElements.forEach(el => {
     const div = document.createElement("div");
     div.classList.add("element-tile", el.type);
     div.dataset.number = el.number;
@@ -115,41 +129,65 @@ function createGrid() {
   });
 }
 
+function updateProgressLabel() {
+  if (mode === "explorer") {
+    progressDisplay.classList.remove("hidden");
+    progressDisplay.textContent = `Unlocked: Periods 1–${currentMaxPeriod}`;
+  } else {
+    progressDisplay.classList.remove("hidden");
+    progressDisplay.textContent = "Full table: Periods 1–4";
+  }
+}
+
 // Question generation
 
 function makeExplorerQuestion() {
-  const qType = sample(["symbolToName", "nameToSymbol", "type", "group", "period"]);
+  const qType = sample(["symbolToName", "nameToSymbol", "type", "group", "period", "numberToSymbol"]);
+  const pool = elements.filter(e => e.period <= currentMaxPeriod);
+
   let target, text, hint, correctIds;
 
   if (qType === "symbolToName") {
-    target = sample(elements);
+    target = sample(pool);
     text = `Click the element with the <strong>symbol ${target.symbol}</strong>.`;
-    hint = `You're looking for the element called <em>${target.name}</em>.`;
+    hint = `You will only see the <em>names</em> – match the symbol to the correct name.`;
     correctIds = [target.number];
+    setBoardView("names-only");
   } else if (qType === "nameToSymbol") {
-    target = sample(elements);
+    target = sample(pool);
     text = `Click the element called <strong>${target.name}</strong>.`;
-    hint = `Its symbol is <em>${target.symbol}</em>.`;
+    hint = `You will only see the <em>symbols</em> – match the name to the correct symbol.`;
     correctIds = [target.number];
+    setBoardView("symbols-only");
+  } else if (qType === "numberToSymbol") {
+    target = sample(pool);
+    text = `Click the element with <strong>atomic number ${target.number}</strong>.`;
+    hint = `Only symbols are visible – think: which symbol has that atomic number?`;
+    correctIds = [target.number];
+    setBoardView("symbols-only");
   } else if (qType === "type") {
     const typeOpts = ["metal", "nonmetal", "halogen", "noblegas"];
     const chosenType = sample(typeOpts);
-    const matches = elements.filter(e => e.type === chosenType);
+    const matches = pool.filter(e => e.type === chosenType);
     text = `Click any <strong>${readableType(chosenType)}</strong>.`;
-    hint = `Look at the colours: use the legend under the table.`;
+    hint = `Use the colours and legend to help you. Numbers are hidden.`;
     correctIds = matches.map(e => e.number);
+    setBoardView("minimal");
   } else if (qType === "group") {
     const groupNum = sample([1, 2, 3, 4, 5, 6, 7, 8]);
-    const matches = elements.filter(e => e.group === groupNum);
+    const matches = pool.filter(e => e.group === groupNum);
     text = `Click an element in <strong>Group ${groupNum}</strong>.`;
-    hint = `Think about the vertical columns.`;
+    hint = `Vertical columns. Numbers are hidden – use positions.`;
     correctIds = matches.map(e => e.number);
+    setBoardView("minimal");
   } else { // period
-    const periodNum = sample([1, 2, 3, 4]);
-    const matches = elements.filter(e => e.period === periodNum);
+    const periodChoices = pool.map(e => e.period);
+    const periodNum = sample([...new Set(periodChoices)]);
+    const matches = pool.filter(e => e.period === periodNum);
     text = `Click an element in <strong>Period ${periodNum}</strong>.`;
-    hint = `Remember: period = row.`;
+    hint = `Rows go across. Numbers are hidden – use positions.`;
     correctIds = matches.map(e => e.number);
+    setBoardView("minimal");
   }
 
   return { text, hint, correctIds, type: "explorer" };
@@ -157,23 +195,29 @@ function makeExplorerQuestion() {
 
 function makeRaceQuestion() {
   const qType = sample(["symbolToName", "nameToSymbol", "numberToSymbol"]);
+  const pool = elements; // full table (first 20) for race
   let target, text, hint, correctIds;
 
   if (qType === "symbolToName") {
-    target = sample(elements);
+    target = sample(pool);
     text = `Race Q: Click the element with <strong>symbol ${target.symbol}</strong>.`;
     hint = "";
     correctIds = [target.number];
+    setBoardView("names-only");
   } else if (qType === "nameToSymbol") {
-    target = sample(elements);
+    target = sample(pool);
     text = `Race Q: Click <strong>${target.name}</strong>.`;
     hint = "";
     correctIds = [target.number];
+    setBoardView("symbols-only");
   } else {
-    target = sample(elements);
+    target = sample(pool);
     text = `Race Q: Click the element with <strong>atomic number ${target.number}</strong>.`;
     hint = "";
     correctIds = [target.number];
+    // Randomly hide either names or symbols to mix challenge
+    const views = ["symbols-only", "names-only"];
+    setBoardView(sample(views));
   }
 
   return { text, hint, correctIds, type: "race" };
@@ -182,7 +226,7 @@ function makeRaceQuestion() {
 function readableType(type) {
   switch (type) {
     case "noblegas": return "noble gas";
-    case "nonmetal": return "non‑metal";
+    case "nonmetal": return "non-metal";
     default: return type;
   }
 }
@@ -194,6 +238,11 @@ function startExplorerMode() {
   score = 0;
   lives = 3;
   stopTimer();
+
+  currentMaxPeriod = 2; // start with Periods 1–2 only
+  createGrid();
+  setBoardView("all");
+  updateProgressLabel();
 
   modeLabel.textContent = "Mode: Explorer";
   scoreDisplay.textContent = "Score: 0";
@@ -213,6 +262,12 @@ function startRaceMode() {
   timer = RACE_DURATION;
   playerProgress = 0;
   cpuProgress = 0;
+
+  // Full (within our 20-element set)
+  currentMaxPeriod = 4;
+  createGrid(currentMaxPeriod);
+  setBoardView("all");
+  updateProgressLabel();
 
   modeLabel.textContent = "Mode: Race";
   scoreDisplay.textContent = "Score: 0";
@@ -254,6 +309,25 @@ function updateRaceTrack() {
   cpuCar.style.width = `${cpuProgress}%`;
 }
 
+// Unlocking more of the table in Explorer
+
+function checkUnlocks() {
+  let unlocked = false;
+  if (score >= 30 && currentMaxPeriod < 3) {
+    currentMaxPeriod = 3; // unlock Period 3 (Na–Ar)
+    unlocked = true;
+  }
+  if (score >= 70 && currentMaxPeriod < 4) {
+    currentMaxPeriod = 4; // unlock Period 4 (K–Ca)
+    unlocked = true;
+  }
+  if (unlocked) {
+    createGrid();
+    updateProgressLabel();
+    missionHint.innerHTML = "⭐ New elements unlocked! Scroll the table and keep exploring.";
+  }
+}
+
 // Question flow
 
 function nextQuestion() {
@@ -286,6 +360,10 @@ function onElementClick(event) {
     feedbackEl.classList.add("correct");
     feedbackEl.classList.remove("wrong");
     tile.classList.add("correct-pulse");
+
+    if (mode === "explorer") {
+      checkUnlocks();
+    }
 
     if (mode === "race") {
       const step = 100 / RACE_QUESTIONS;
@@ -389,5 +467,7 @@ playAgainBtn.addEventListener("click", () => {
 });
 
 // Init
-createGrid();
+currentMaxPeriod = 2;
+createGrid(currentMaxPeriod);
+setBoardView("all");
 showMenu();
