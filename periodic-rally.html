@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Periodic Explorer Race</title>
+    <link rel="stylesheet" href="periodic-rally.css">
+</head>
+<body>
+    <header>
+        <h1>⚗️ Periodic Explorer Race</h1>
+        <p class="subtitle">KS3 Periodic Table Game – Explorer + Race Modes</p>
+    </header>
+
+    <main>
+        <section id="menu-screen" class="card">
+            <h2>Select Game Mode</h2>
+            <p>Choose how you want to learn the periodic table:</p>
+            <div class="button-row">
+                <button id="explorer-btn" class="primary">Explorer Mode</button>
+                <button id="race-btn" class="accent">Race Mode</button>
+            </div>
+            <details class="instructions">
+                <summary>How to play</summary>
+                <ul>
+                    <li><strong>Explorer Mode</strong> – No timer. Complete missions such as “Click the symbol for Sodium” or “Find a Group 1 metal”. Great for learning.</li>
+                    <li><strong>Race Mode</strong> – Beat the rival car by answering quickly and accurately before time runs out.</li>
+                    <li>Click the correct element on the colourful periodic table grid.</li>
+                </ul>
+            </details>
+        </section>
+
+        <section id="game-screen" class="hidden">
+            <div class="top-bar">
+                <button id="back-to-menu" class="ghost small">&larr; Back to Menu</button>
+                <div id="mode-label" class="pill">Mode: Explorer</div>
+                <div class="status">
+                    <span id="score-display">Score: 0</span>
+                    <span id="lives-display" class="hidden">Lives: 3</span>
+                    <span id="timer-display" class="hidden">Time: 60</span>
+                </div>
+            </div>
+
+            <div class="layout">
+                <section class="left-panel">
+                    <div class="card mission-card">
+                        <h2>Mission</h2>
+                        <p id="mission-text">Click an element to start!</p>
+                        <p id="mission-hint" class="hint"></p>
+                        <p id="feedback" class="feedback"></p>
+                    </div>
+
+                    <div class="card race-card" id="race-panel">
+                        <h3>Race Track</h3>
+                        <div class="track">
+                            <div class="car-label">You</div>
+                            <div class="lane">
+                                <div id="player-car" class="car"></div>
+                            </div>
+                            <div class="car-label rival">Rival</div>
+                            <div class="lane">
+                                <div id="cpu-car" class="car rival-car"></div>
+                            </div>
+                        </div>
+                        <p class="hint small">Answer questions to move your car. The rival car moves as time passes.</p>
+                    </div>
+                </section>
+
+                <section class="right-panel">
+                    <div class="card">
+                        <h2>First 20 Elements</h2>
+                        <p class="hint small">Colour shows type (metal, non‑metal, noble gas, halogen). Hover to see names.</p>
+                        <div id="periodic-grid" class="periodic-grid">
+                            <!-- Elements will be injected here by JS -->
+                        </div>
+                        <div class="legend">
+                            <span class="chip metal">Metal</span>
+                            <span class="chip nonmetal">Non‑metal</span>
+                            <span class="chip halogen">Halogen</span>
+                            <span class="chip noblegas">Noble gas</span>
+                        </div>
+                    </div>
+                </section>
+            </div>
+
+            <section id="summary-screen" class="card hidden">
+                <h2>Game Over</h2>
+                <p id="summary-text"></p>
+                <button id="play-again" class="primary small">Play again</button>
+            </section>
+        </section>
+    </main>
+
+    <footer>
+        <p>Periodic Explorer Race – made for KS3 Y9 Chemistry</p>
+    </footer>
+
+    <script src="periodic-rally.js"></script>
+</body>
+</html>
